@@ -1,0 +1,109 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      String   @default("admin")
+  companyId String?
+  company   Company? @relation(fields: [companyId], references: [id])
+  createdAt DateTime @default(now())
+  revenues  Revenue[]
+  expenses  Expense[]
+}
+
+model Company {
+  id         String     @id @default(cuid())
+  name       String
+  cnpj       String?
+  phone      String?
+  email      String?
+  currency   String     @default("BRL")
+  createdAt  DateTime   @default(now())
+  users      User[]
+  categories Category[]
+  revenues   Revenue[]
+  expenses   Expense[]
+  accounts   Account[]
+  goals      Goal[]
+}
+
+model Category {
+  id        String    @id @default(cuid())
+  name      String
+  type      String
+  companyId String
+  company   Company   @relation(fields: [companyId], references: [id])
+  revenues  Revenue[]
+  expenses  Expense[]
+}
+
+model Revenue {
+  id            String   @id @default(cuid())
+  description   String
+  client        String?
+  value         Float
+  date          DateTime
+  categoryId    String
+  category      Category @relation(fields: [categoryId], references: [id])
+  paymentMethod String?
+  status        String   @default("received")
+  notes         String?
+  companyId     String
+  company       Company  @relation(fields: [companyId], references: [id])
+  createdById   String
+  createdBy     User     @relation(fields: [createdById], references: [id])
+  createdAt     DateTime @default(now())
+}
+
+model Expense {
+  id            String    @id @default(cuid())
+  description   String
+  supplier      String?
+  value         Float
+  dueDate       DateTime
+  paymentDate   DateTime?
+  categoryId    String
+  category      Category  @relation(fields: [categoryId], references: [id])
+  paymentMethod String?
+  type          String?
+  recurring     Boolean   @default(false)
+  costCenter    String?
+  status        String    @default("pending")
+  notes         String?
+  companyId     String
+  company       Company   @relation(fields: [companyId], references: [id])
+  createdById   String
+  createdBy     User      @relation(fields: [createdById], references: [id])
+  createdAt     DateTime  @default(now())
+}
+
+model Account {
+  id          String   @id @default(cuid())
+  type        String
+  description String
+  value       Float
+  dueDate     DateTime
+  status      String   @default("pending")
+  companyId   String
+  company     Company  @relation(fields: [companyId], references: [id])
+  createdAt   DateTime @default(now())
+}
+
+model Goal {
+  id          String   @id @default(cuid())
+  title       String
+  targetValue Float
+  period      String
+  companyId   String
+  company     Company  @relation(fields: [companyId], references: [id])
+  createdAt   DateTime @default(now())
+}
