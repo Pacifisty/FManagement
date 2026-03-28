@@ -12,6 +12,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { AccountForm } from './AccountForm'
 import { Account } from '@/types'
 import { formatCurrency, formatDate } from '@/lib/utils'
@@ -33,11 +34,13 @@ const statusLabels: Record<string, { label: string; variant: 'success' | 'warnin
 export function AccountList({ accounts, onRefresh }: AccountListProps) {
   const [editAccount, setEditAccount] = useState<Account | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [deleteId, setDeleteId] = useState<string | null>(null)
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Deseja excluir esta conta?')) return
+  const handleDelete = async () => {
+    if (!deleteId) return
 
-    const res = await fetch(`/api/accounts/${id}`, { method: 'DELETE' })
+    const res = await fetch(`/api/accounts/${deleteId}`, { method: 'DELETE' })
+    setDeleteId(null)
     if (res.ok) {
       toast.success('Conta excluída!')
       onRefresh()
@@ -87,7 +90,7 @@ export function AccountList({ accounts, onRefresh }: AccountListProps) {
                       <Button size="icon" variant="ghost" onClick={() => { setEditAccount(account); setDialogOpen(true) }}>
                         <Pencil className="w-4 h-4" />
                       </Button>
-                      <Button size="icon" variant="ghost" onClick={() => handleDelete(account.id)} className="text-red-500 hover:text-red-700">
+                      <Button size="icon" variant="ghost" onClick={() => setDeleteId(account.id)} className="text-red-500 hover:text-red-700">
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>
@@ -108,6 +111,16 @@ export function AccountList({ accounts, onRefresh }: AccountListProps) {
           />
         </DialogContent>
       </Dialog>
+
+      <ConfirmDialog
+        open={!!deleteId}
+        title="Excluir Conta"
+        description="Deseja excluir esta conta? Esta ação não pode ser desfeita."
+        confirmLabel="Excluir"
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteId(null)}
+      />
     </>
   )
 }
+

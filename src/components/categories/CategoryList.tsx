@@ -12,6 +12,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { CategoryForm } from './CategoryForm'
 import { Category } from '@/types'
 import { Pencil, Trash2 } from 'lucide-react'
@@ -25,11 +26,13 @@ interface CategoryListProps {
 export function CategoryList({ categories, onRefresh }: CategoryListProps) {
   const [editCategory, setEditCategory] = useState<Category | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [deleteId, setDeleteId] = useState<string | null>(null)
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Deseja excluir esta categoria? Isso pode afetar registros existentes.')) return
+  const handleDelete = async () => {
+    if (!deleteId) return
 
-    const res = await fetch(`/api/categories/${id}`, { method: 'DELETE' })
+    const res = await fetch(`/api/categories/${deleteId}`, { method: 'DELETE' })
+    setDeleteId(null)
     if (res.ok) {
       toast.success('Categoria excluída!')
       onRefresh()
@@ -65,7 +68,7 @@ export function CategoryList({ categories, onRefresh }: CategoryListProps) {
                     <Button size="icon" variant="ghost" onClick={() => { setEditCategory(cat); setDialogOpen(true) }}>
                       <Pencil className="w-4 h-4" />
                     </Button>
-                    <Button size="icon" variant="ghost" onClick={() => handleDelete(cat.id)} className="text-red-500 hover:text-red-700">
+                    <Button size="icon" variant="ghost" onClick={() => setDeleteId(cat.id)} className="text-red-500 hover:text-red-700">
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
@@ -85,6 +88,16 @@ export function CategoryList({ categories, onRefresh }: CategoryListProps) {
           />
         </DialogContent>
       </Dialog>
+
+      <ConfirmDialog
+        open={!!deleteId}
+        title="Excluir Categoria"
+        description="Deseja excluir esta categoria? Isso pode afetar registros existentes."
+        confirmLabel="Excluir"
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteId(null)}
+      />
     </>
   )
 }
+

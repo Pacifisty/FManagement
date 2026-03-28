@@ -12,6 +12,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { ExpenseForm } from './ExpenseForm'
 import { Expense } from '@/types'
 import { formatCurrency, formatDate } from '@/lib/utils'
@@ -32,11 +33,13 @@ const statusLabels: Record<string, { label: string; variant: 'success' | 'warnin
 export function ExpenseList({ expenses, onRefresh }: ExpenseListProps) {
   const [editExpense, setEditExpense] = useState<Expense | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [deleteId, setDeleteId] = useState<string | null>(null)
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Deseja excluir esta despesa?')) return
+  const handleDelete = async () => {
+    if (!deleteId) return
 
-    const res = await fetch(`/api/expenses/${id}`, { method: 'DELETE' })
+    const res = await fetch(`/api/expenses/${deleteId}`, { method: 'DELETE' })
+    setDeleteId(null)
     if (res.ok) {
       toast.success('Despesa excluída!')
       onRefresh()
@@ -91,7 +94,7 @@ export function ExpenseList({ expenses, onRefresh }: ExpenseListProps) {
                       <Button size="icon" variant="ghost" onClick={() => handleEdit(expense)}>
                         <Pencil className="w-4 h-4" />
                       </Button>
-                      <Button size="icon" variant="ghost" onClick={() => handleDelete(expense.id)} className="text-red-500 hover:text-red-700">
+                      <Button size="icon" variant="ghost" onClick={() => setDeleteId(expense.id)} className="text-red-500 hover:text-red-700">
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>
@@ -112,6 +115,16 @@ export function ExpenseList({ expenses, onRefresh }: ExpenseListProps) {
           />
         </DialogContent>
       </Dialog>
+
+      <ConfirmDialog
+        open={!!deleteId}
+        title="Excluir Despesa"
+        description="Deseja excluir esta despesa? Esta ação não pode ser desfeita."
+        confirmLabel="Excluir"
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteId(null)}
+      />
     </>
   )
 }
+
